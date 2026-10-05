@@ -23,6 +23,22 @@ CREATE TABLE IF NOT EXISTS yaw_logs (
     reason text,
     created_by text NOT NULL,
     created_at timestamptz NOT NULL,
-    processed_at timestamptz
+    processed_at timestamptz,
+    CONSTRAINT yaw_logs_done_verdict_check
+        CHECK (status <> 'done' OR verdict IN ('合格', '偏航超差'))
 );
+"""
+
+# 旧表（约束建立前已存在）补同一道约束；须在半态数据修复之后执行。
+ADD_DONE_VERDICT_CONSTRAINT = """
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'yaw_logs_done_verdict_check'
+    ) THEN
+        ALTER TABLE yaw_logs
+            ADD CONSTRAINT yaw_logs_done_verdict_check
+            CHECK (status <> 'done' OR verdict IN ('合格', '偏航超差'));
+    END IF;
+END$$;
 """
