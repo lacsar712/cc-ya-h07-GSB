@@ -253,7 +253,26 @@ export class YawAlignApp extends LitElement {
     if (row.status === "pending") return "pending";
     if (row.verdict === "合格") return "ok";
     if (row.verdict === "偏航超差") return "bad";
-    return "";
+    // 已完成却没有合法结论 = 半态，必须红色告警，不得粉饰为正常。
+    return "bad";
+  }
+
+  private statusTag(row: LogRow) {
+    if (row.status === "pending") {
+      return html`<span class="tag pending">待处理</span>`;
+    }
+    if (row.verdict === "合格" || row.verdict === "偏航超差") {
+      return html`<span class="tag ok">已完成</span>`;
+    }
+    return html`<span class="tag bad">结论缺失</span>`;
+  }
+
+  private verdictTag(row: LogRow) {
+    if (row.status === "pending") return "—";
+    if (row.verdict === "合格" || row.verdict === "偏航超差") {
+      return html`<span class="tag ${this.verdictClass(row)}">${row.verdict}</span>`;
+    }
+    return html`<span class="tag bad">结论缺失</span>`;
   }
 
   render() {
@@ -343,17 +362,9 @@ export class YawAlignApp extends LitElement {
                   <td>${row.id}</td>
                   <td>${row.turbine_code}</td>
                   <td>${row.yaw_err_deg}</td>
-                  <td>
-                    <span class="tag ${row.status === "pending" ? "pending" : "ok"}">
-                      ${row.status === "pending" ? "待处理" : "已完成"}
-                    </span>
-                  </td>
-                  <td>
-                    ${row.verdict
-                      ? html`<span class="tag ${this.verdictClass(row)}">${row.verdict}</span>`
-                      : "—"}
-                  </td>
-                  <td>${row.reason ?? "—"}</td>
+                  <td>${this.statusTag(row)}</td>
+                  <td>${this.verdictTag(row)}</td>
+                  <td>${row.status === "pending" ? "—" : (row.reason ?? "结论缺失")}</td>
                 </tr>
               `
             )}

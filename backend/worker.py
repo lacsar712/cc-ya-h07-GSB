@@ -31,12 +31,13 @@ def claim_and_process(conn) -> bool:
         ).fetchone()
         if row is None:
             return False
-        from h07_extra_trap import on_judge, reason_for_skip
-        skipped = on_judge(float(row["yaw_err_deg"]))
-        if skipped == "":
-            verdict, reason = "", reason_for_skip()
-        else:
-            verdict, reason = judge(float(row["yaw_err_deg"]))
+        # 判定链路必须直通 rules.judge：合格读数必须落「合格」，
+        # 明显超差必须落「偏航超差」，done 行不得带空结论（半态）。
+        verdict, reason = judge(float(row["yaw_err_deg"]))
+        if not verdict or not reason:
+            raise RuntimeError(
+                f"judge returned an empty verdict/reason for id={row['id']}"
+            )
         now = datetime.now(timezone.utc)
         conn.execute(
             """UPDATE yaw_logs

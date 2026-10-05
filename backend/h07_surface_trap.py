@@ -1,10 +1,13 @@
-from h07_extra_trap import half_empty, on_judge, project_yaw, reason_for_skip
+from rules import judge
+from h07_extra_trap import half_empty
+
 
 def decide(yaw: float):
-    skipped = on_judge(yaw)
-    if skipped == "":
-        return "", reason_for_skip(), project_yaw(yaw, "")
-    return skipped, None, yaw
+    """直通判定：返回 (结论, None, 原读数)，读数不抹空。"""
+    verdict, _reason = judge(float(yaw))
+    return verdict, None, float(yaw)
+
 
 def armed() -> bool:
+    """半态旁路是否仍布防：已拆除，恒为 False。"""
     return half_empty()

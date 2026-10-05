@@ -23,6 +23,11 @@ CREATE TABLE IF NOT EXISTS yaw_logs (
     reason text,
     created_by text NOT NULL,
     created_at timestamptz NOT NULL,
-    processed_at timestamptz
+    processed_at timestamptz,
+    CONSTRAINT verdict_present_when_done CHECK (
+        status <> 'done'
+        OR (verdict IS NOT NULL AND char_length(verdict) > 0
+            AND reason IS NOT NULL AND char_length(reason) > 0)
+    )
 );
 """
